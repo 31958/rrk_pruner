@@ -19,7 +19,8 @@ def set_random_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def gen_baseline(prompts, model, seed, directory):
+def gen_baseline(prompts, model, seed, directory, start, end):
+    prompts = prompts[start:end]
     # Baseline generation
     baseline_pipe = StableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16).to("cuda:0")
 
@@ -37,7 +38,7 @@ def gen_baseline(prompts, model, seed, directory):
     # Deepcache generation
     pipe = DeepCacheStableDiffusionPipeline.from_pretrained(model, torch_dtype=torch.float16).to("cuda:0")
 
-    for i in range(0, len(prompts)):
+    for i in range(start, end):
         prompt = prompts[i]
 
         set_random_seed(seed)
@@ -56,5 +57,4 @@ if __name__ == "__main__":
     with open(labels_file) as file:
         lines = [line.rstrip() for line in file]
 
-    prompts = lines[:2]
-    gen_baseline(prompts, DEFAULT_MODEL, DEFAULT_SEED, DEFAULT_OUTPUT_DIR)
+    gen_baseline(lines, DEFAULT_MODEL, DEFAULT_SEED, DEFAULT_OUTPUT_DIR, 60, 5000)
