@@ -2,5 +2,5 @@ huggingface-hub==0.25.2
 diffusers==0.24.0
 transformers==4.48.3
 deepcache==0.1.1
-fvcore
 scikit-image
+torch-fidelity

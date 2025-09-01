@@ -1,10 +1,11 @@
-import torch
-from transformers import CLIPProcessor, CLIPModel
 import os
-from PIL import Image
+
 import numpy as np
+import torch
+from PIL import Image
 from skimage.metrics import structural_similarity as ssim
-from fvcore.nn import FlopCountAnalysis
+from transformers import CLIPProcessor, CLIPModel
+from torch_fidelity import calculate_metrics
 
 from vars import labels_file
 
@@ -93,6 +94,39 @@ class SDForwardWrapper(torch.nn.Module):
         output = noise_pred.sample if hasattr(noise_pred, "sample") else noise_pred
         return output
 
+
+
+real_dir = "data/baseline"
+gen_dir = "data/deepcached"
+save_dir = "data/fid"
+os.makedirs(save_dir, exist_ok=True)
+
+
+def resize_folder(folder, size=(256, 256)):
+    for fname in os.listdir(folder):
+        if fname.endswith(('.jpg', '.png')):
+            path = os.path.join(folder, fname)
+            save = os.path.join(save_dir, fname)
+            try:
+                img = Image.open(path).convert('RGB')
+                img = img.resize(size)
+                img.save(save)
+            except Exception as e:
+                print(f"Skipping {path}: {e}")
+
+resize_folder(gen_dir)
+
+
+metrics = calculate_metrics(
+    input1=real_dir,
+    input2=save_dir,
+    cuda=True,
+    isc=False,
+    fid=True,
+    kid=False
+)
+
+print("FID Score:", metrics["frechet_inception_distance"])
 
 MAX_TO = 59
 
