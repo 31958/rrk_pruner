@@ -1,4 +1,5 @@
 import os
+from multiprocessing import freeze_support
 
 import numpy as np
 import torch
@@ -76,26 +77,6 @@ def compute_ssim(real_dir, generated_dir):
     return np.mean(scores) if scores else 0
 
 
-class SDForwardWrapper(torch.nn.Module):
-    def __init__(self, pipe):
-        super().__init__()
-        self.clip = pipe.text_encoder
-        self.unet = pipe.unet
-        self.vae = pipe.vae
-
-    def forward(self, input_ids, latent):
-        hidden_states = self.clip.text_model.embeddings(input_ids)
-        for block in self.clip.text_model.encoder.layers:
-            hidden_states = block(hidden_states, attention_mask=attention_mask, causal_attention_mask=None)[0]
-
-        t = torch.tensor([1], device=latent.device)
-        noise_pred = self.unet(latent, t, encoder_hidden_states=hidden_states)
-
-        output = noise_pred.sample if hasattr(noise_pred, "sample") else noise_pred
-        return output
-
-
-
 real_dir = "data/baseline"
 gen_dir = "data/deepcached"
 save_dir = "data/fid"
@@ -114,33 +95,35 @@ def resize_folder(folder, size=(256, 256)):
             except Exception as e:
                 print(f"Skipping {path}: {e}")
 
-resize_folder(gen_dir)
 
+if __name__ == '__main__':
+    freeze_support()
+    # resize_folder(gen_dir)
 
-metrics = calculate_metrics(
-    input1=real_dir,
-    input2=save_dir,
-    cuda=True,
-    isc=False,
-    fid=True,
-    kid=False
-)
+    metrics = calculate_metrics(
+        input1=real_dir,
+        input2=save_dir,
+        cuda=True,
+        isc=False,
+        fid=True,
+        kid=False
+    )
 
-print("FID Score:", metrics["frechet_inception_distance"])
+    print("FID Score:", metrics["frechet_inception_distance"])
 
-MAX_TO = 59
+    MAX_TO = 59
 
-with open(labels_file, "r") as file:
-    labels = file.readlines()
+    with open(labels_file, "r") as file:
+        labels = file.readlines()
 
-labels = [label.replace("\n", "") for label in labels]
+    labels = [label.replace("\n", "") for label in labels]
 
-labels = labels[:MAX_TO]
-clip_score = compute_clip_score("data/deepcached", labels)
-print("Average CLIP Score:", clip_score)
+    labels = labels[:MAX_TO]
+    clip_score = compute_clip_score("data/deepcached", labels)
+    print("Average CLIP Score:", clip_score)
 
-real_dir = "data/baseline"
-gen_dir = "data/deepcached"
+    real_dir = "data/baseline"
+    gen_dir = "data/deepcached"
 
-ssim_score = compute_ssim(real_dir, gen_dir)
-print("Average SSIM:", ssim_score)
+    ssim_score = compute_ssim(real_dir, gen_dir)
+    print("Average SSIM:", ssim_score)
