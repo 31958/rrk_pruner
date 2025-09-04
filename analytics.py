@@ -60,9 +60,12 @@ def compute_clip_score(generated_dir, prompts):
 def compute_ssim(real_dir, generated_dir):
     files_real = sorted([f for f in os.listdir(real_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
     files_gen = sorted([f for f in os.listdir(generated_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+    files_gen.sort(key=lambda x: int(x.split(sep=".")[0].split("_")[1]))
 
     scores = []
     for fr, fg in zip(files_real, files_gen):
+        print(fr)
+        print(fg)
         try:
             img_real = np.array(Image.open(os.path.join(real_dir, fr)).convert("L").resize((256, 256)))
             img_gen = np.array(Image.open(os.path.join(generated_dir, fg)).convert("L").resize((256, 256)))
@@ -77,17 +80,11 @@ def compute_ssim(real_dir, generated_dir):
     return np.mean(scores) if scores else 0
 
 
-real_dir = "data/baseline"
-gen_dir = "data/deepcached"
-save_dir = "data/fid"
-os.makedirs(save_dir, exist_ok=True)
-
-
-def resize_folder(folder, size=(256, 256)):
+def resize_folder(folder, dest, size=(256, 256)):
     for fname in os.listdir(folder):
         if fname.endswith(('.jpg', '.png')):
             path = os.path.join(folder, fname)
-            save = os.path.join(save_dir, fname)
+            save = os.path.join(dest, fname)
             try:
                 img = Image.open(path).convert('RGB')
                 img = img.resize(size)
@@ -97,21 +94,28 @@ def resize_folder(folder, size=(256, 256)):
 
 
 if __name__ == '__main__':
+    real_dir = "data/b"
+    gen_dir = "data/d"
+    save_dir = "data/fidd"
+    save_dir2 = "data/fidb"
+
     freeze_support()
-    # resize_folder(gen_dir)
+    # os.makedirs(save_dir, exist_ok=True)
+    #
+    # resize_folder(gen_dir, save_dir)
 
-    metrics = calculate_metrics(
-        input1=real_dir,
-        input2=save_dir,
-        cuda=True,
-        isc=False,
-        fid=True,
-        kid=False
-    )
+    # metrics = calculate_metrics(
+    #     input1=save_dir,
+    #     input2="C:/P/Z/RRK/dcache/data/val2017",
+    #     cuda=True,
+    #     isc=False,
+    #     fid=True,
+    #     kid=False
+    # )
 
-    print("FID Score:", metrics["frechet_inception_distance"])
+    # print("FID Score:", metrics["frechet_inception_distance"])
 
-    MAX_TO = 59
+    MAX_TO = 100
 
     with open(labels_file, "r") as file:
         labels = file.readlines()
@@ -119,11 +123,8 @@ if __name__ == '__main__':
     labels = [label.replace("\n", "") for label in labels]
 
     labels = labels[:MAX_TO]
-    clip_score = compute_clip_score("data/deepcached", labels)
+    clip_score = compute_clip_score(gen_dir, labels)
     print("Average CLIP Score:", clip_score)
-
-    real_dir = "data/baseline"
-    gen_dir = "data/deepcached"
 
     ssim_score = compute_ssim(real_dir, gen_dir)
     print("Average SSIM:", ssim_score)
