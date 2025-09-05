@@ -94,37 +94,37 @@ def resize_folder(folder, dest, size=(256, 256)):
 
 
 if __name__ == '__main__':
-    real_dir = "data/b"
-    gen_dir = "data/d"
-    save_dir = "data/fidd"
-    save_dir2 = "data/fidb"
+    real_dir = "data/b10"
+    gen_dir = "data/deepcache-c10"
+    save_dir = "data/fiddd"
+    save_dir2 = "data/fidbb"
 
     freeze_support()
-    # os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(save_dir, exist_ok=True)
+
+    resize_folder(gen_dir, save_dir)
+
+    metrics = calculate_metrics(
+        input1=save_dir,
+        input2="C:/P/Z/RRK/dcache/data/val2017",
+        cuda=True,
+        isc=False,
+        fid=True,
+        kid=False
+    )
+
+    print("FID Score:", metrics["frechet_inception_distance"])
+
+    # MAX_TO = 100
     #
-    # resize_folder(gen_dir, save_dir)
-
-    # metrics = calculate_metrics(
-    #     input1=save_dir,
-    #     input2="C:/P/Z/RRK/dcache/data/val2017",
-    #     cuda=True,
-    #     isc=False,
-    #     fid=True,
-    #     kid=False
-    # )
-
-    # print("FID Score:", metrics["frechet_inception_distance"])
-
-    MAX_TO = 100
-
-    with open(labels_file, "r") as file:
-        labels = file.readlines()
-
-    labels = [label.replace("\n", "") for label in labels]
-
-    labels = labels[:MAX_TO]
-    clip_score = compute_clip_score(gen_dir, labels)
-    print("Average CLIP Score:", clip_score)
-
-    ssim_score = compute_ssim(real_dir, gen_dir)
-    print("Average SSIM:", ssim_score)
+    # with open(labels_file, "r") as file:
+    #     labels = file.readlines()
+    #
+    # labels = [label.replace("\n", "") for label in labels]
+    #
+    # labels = labels[:MAX_TO]
+    # clip_score = compute_clip_score(gen_dir, labels)
+    # print("Average CLIP Score:", clip_score)
+    #
+    # ssim_score = compute_ssim(real_dir, gen_dir)
+    # print("Average SSIM:", ssim_score)

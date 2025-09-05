@@ -45,7 +45,7 @@ def gen_baseline(prompts, model, seed, directory, start, end):
         set_random_seed(seed)
         deepcache_output = pipe(
             prompt,
-            cache_interval=3, cache_layer_id=0, cache_block_id=0,
+            cache_interval=10, cache_layer_id=0, cache_block_id=0,
             uniform=False, pow=1.4, center=15,
             output_type='pt', return_dict=True
         ).images
@@ -58,4 +58,4 @@ if __name__ == "__main__":
     with open(labels_file) as file:
         lines = [line.rstrip() for line in file]
 
-    gen_baseline(lines, DEFAULT_MODEL, DEFAULT_SEED, "data/deepcache3", 0, 5000)
+    gen_baseline(lines, DEFAULT_MODEL, DEFAULT_SEED, "data/deepcache-c10", 0, 5000)
